@@ -19,7 +19,7 @@ HEIGHT, WIDTH, CHANNELS = (75, 200, 3)
 class InceptionV3Model(BaseModel):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(height=HEIGHT, width=WIDTH, channels=CHANNELS)
 
     def build_model(self):
         """Overridden method for building the transfer learning InceptionV3 model structure

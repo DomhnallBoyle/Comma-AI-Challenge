@@ -10,3 +10,16 @@ Your deliverable is test.txt
 
 We will evaluate your test.txt using mean squared error. <10 is good. <5 is better. <3 is heart.
 
+Usage: 
+
+```
+# get frames from the videos
+python src/utils/video_to_frames.py data/train.mp4 data/train_images
+python src/utils/video_to_frames.py data/test.mp4 data/test_images
+
+# create training dataset
+python src/utils/video_to_dataset.py data/train_images data/train.txt data
+
+# train models
+
+```

@@ -10,20 +10,32 @@
 import argparse
 import cv2
 import os
+import shutil
 
 
 def main(args):
+    """
+
+    :param args:
+    :return:
+    """
     video_capture = cv2.VideoCapture(args.video_path)
     number_of_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
     frame_count = 0
+    output_directory = args.output_directory
+
+    # remove output folder if exists
+    if os.path.exists(output_directory):
+        shutil.rmtree(output_directory)
+    os.makedirs(output_directory)
 
     while video_capture.isOpened():
         success, frame = video_capture.read()
 
         if success:
             frame_count += 1
-            image_filename = os.path.join(args.output_directory, 'frame_{}.jpg'.format(frame_count))
+            image_filename = os.path.join(output_directory, '{}.jpg'.format(frame_count))
             cv2.imwrite(image_filename, frame)
 
             if args.debug:
