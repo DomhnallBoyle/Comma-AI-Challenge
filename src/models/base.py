@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 # for local source imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -70,26 +71,28 @@ class BaseModel(ABC):
         training_parser.add_argument('--epochs', help='Number of epochs', type=int, default=EPOCHS)
         training_parser.add_argument('--batch_size', help='Size of the batches', type=int, default=BATCH_SIZE)
         training_parser.add_argument('--learning_rate', help='Learning rate', type=float, default=LEARNING_RATE)
-        training_parser.add_argument('--crop_to', help='Area of image to crop', type=int, default=0)
+        training_parser.add_argument('--crop_to', help='Area of frame to crop', type=int, default=0)
 
         testing_parser = subparsers.add_parser('test', help='Testing help')
         testing_parser.add_argument('dataset_path', help='Absolute path to the dataset', type=str)
+        testing_parser.add_argument('model_path', help='Path to the model weights to load', type=str)
+        testing_parser.add_argument('--crop_to', help='Area of frame to crop', type=int, default=0)
 
         return parser
 
-    def load_image(self, image_path):
-        """Load the image given an absolute image path
+    def load_frame(self, frame_path):
+        """Load the frame given an absolute frame path
 
         Args:
-            image_path (String): absolute path of the image
+            frame_path (String): absolute path of the frame
 
         Returns:
-            (List): 3D list representing the read RGB image
+            (List): 3D list representing the read RGB frame
         """
-        if not os.path.exists(image_path):
-            raise OSError('Image not found: ' + image_path)
+        if not os.path.exists(frame_path):
+            raise OSError('frame not found: ' + frame_path)
 
-        return cv2.imread(image_path, 1)
+        return cv2.imread(frame_path, 1)
 
     def load_dataset(self, path):
         return pd.read_csv(path)
@@ -133,15 +136,26 @@ class BaseModel(ABC):
 
     def test(self):
         dataset = self.load_dataset(self.args.dataset_path)
+        frame_paths = dataset['frame'].values
 
-    def inference(self):
-        pass
+        model = self.build_model()
+        model.load_weights(self.args.model_path)
 
-    def batch_generator(self, image_paths, speeds, training):
+        predictions = []
+        for frame_path in tqdm(frame_paths):
+            frame = self.load_frame(frame_path=frame_path)
+            frame = self.preprocess(frame=frame)
+            frame = np.array([frame])  # model expects 4D
+            predictions.append(model.predict(frame)[0][0])
+
+        with open(f'{self.model_directory}/results.txt', 'w') as f:
+            f.writelines([str(prediction) + '\n' for prediction in predictions])
+
+    def batch_generator(self, frame_paths, speeds, training):
         batch_size = self.args.batch_size
 
         # batch size matrices for recording the data
-        _images = np.empty([batch_size, self.height, self.width, self.channels])
+        _frames = np.empty([batch_size, self.height, self.width, self.channels])
         _speeds = np.empty(batch_size)
 
         while True:
@@ -158,19 +172,19 @@ class BaseModel(ABC):
 
             # shuffle at beginning of an epoch if training so different variations of batches are chosen
             if training and self.batch_callback.begin_epoch:
-                permutation = np.random.permutation(len(image_paths))
-                image_paths = np.asarray(image_paths)[permutation]
+                permutation = np.random.permutation(len(frame_paths))
+                frame_paths = np.asarray(frame_paths)[permutation]
                 speeds = np.asarray(speeds)[permutation]
                 self.batch_callback.begin_epoch = False
 
             # load batches
             for index in (index_start, index_end):
                 try:
-                    image_path, speed = image_paths[index], float(speeds[index])
+                    frame_path, speed = frame_paths[index], float(speeds[index])
 
-                    image = self.load_image(image_path=image_path)
+                    frame = self.load_frame(frame_path=frame_path)
 
-                    _images[i] = self.preprocess(image=image)
+                    _frames[i] = self.preprocess(frame=frame)
                     _speeds[i] = speed
 
                     i += 1
@@ -180,7 +194,7 @@ class BaseModel(ABC):
             self.batch_callback.training_sample_index += batch_size
             self.batch_callback.validation_sample_index += batch_size
 
-            yield _images, _speeds
+            yield _frames, _speeds
 
     def get_callbacks(self):
         callbacks = []

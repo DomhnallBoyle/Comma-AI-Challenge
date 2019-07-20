@@ -65,18 +65,18 @@ class NvidiaModel(BaseModel):
         return model
 
     def preprocess(self, **kwargs):
-        image = kwargs['image']
+        frame = kwargs['frame']
 
         # crop
-        image = image[self.args.crop_to:, :, :]
+        frame = frame[self.args.crop_to:, :, :]
 
         # resize
-        image = cv2.resize(image, (self.width, self.height), cv2.INTER_AREA)
+        frame = cv2.resize(frame, (self.width, self.height), cv2.INTER_AREA)
 
         # convert to YUV
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2YUV)
 
-        return image
+        return frame
 
 
 if __name__ == '__main__':

@@ -26,4 +26,7 @@ python src/utils/video_to_dataset.py data/train_images data/train.txt data
 
 # train models
 python src/models/nvidia.py train data/training_dataset.csv
+
+# test models
+python src/models/nvidia.py test data/testing_dataset.csv src/models/nvidia/model.h5
 ```

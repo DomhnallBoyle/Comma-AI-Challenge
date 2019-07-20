@@ -1,0 +1,5 @@
+Keras
+numpy
+opencv-python
+tensorflow
+tqdm
