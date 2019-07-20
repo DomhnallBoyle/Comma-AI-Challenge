@@ -7,6 +7,7 @@
     Python Version: 3.6
 """
 
+import argparse
 import cv2
 import numpy as np
 
@@ -28,8 +29,7 @@ class Sparse(BaseOpticalFlow):
 
     def __init__(self, dimensions, max_corners=MAX_CORNERS, quality_level=QUALITY_LEVEL, min_distance=MIN_DISTANCE,
                  block_size=BLOCK_SIZE, window_size=WIN_SIZE, max_level=MAX_LEVEL, criteria=CRITERIA):
-        super().__init__()
-        self.dimensions = dimensions
+        super().__init__(dimensions=dimensions)
         self.feature_params = {
             'maxCorners': max_corners,
             'qualityLevel': quality_level,
@@ -71,10 +71,8 @@ class Sparse(BaseOpticalFlow):
         return cv2.add(next_frame, mask), mask, good_new.reshape(-1, 1, 2)
 
 
-import sys
-if __name__ == '__main__':
-
-    video_capture = cv2.VideoCapture(sys.argv[1])
+def main(args):
+    video_capture = cv2.VideoCapture(args.video_path)
     width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -95,3 +93,12 @@ if __name__ == '__main__':
             break
 
         previous_frame = next_frame
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('video_path', type=str)
+
+    args = parser.parse_args()
+
+    main(args)

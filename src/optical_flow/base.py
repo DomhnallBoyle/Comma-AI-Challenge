@@ -12,8 +12,8 @@ from abc import ABC, abstractmethod
 
 class BaseOpticalFlow(ABC):
 
-    def __init__(self):
-        pass
+    def __init__(self, dimensions):
+        self.dimensions = dimensions  # height, width, channels
 
     @abstractmethod
     def process(self, previous_frame, next_frame, **kwargs):

@@ -18,25 +18,41 @@ def sorted_nicely(l):
     return sorted(l, key=alphanum_key)
 
 
+def get_frames(path):
+    return sorted_nicely(glob.glob(f'{path}/*.jpg'))
+
+
 def main(args):
-    with open(args.groundtruth_path, 'r') as f:
-        groundtruth = [line.strip() for line in f]
+    if args.mode == 'training':
+        with open(args.groundtruth_path, 'r') as f:
+            groundtruth = [line.strip() for line in f]
 
-    # sort frame locations alphanumerically
-    frames = sorted_nicely(glob.glob(os.path.join(args.images_path, '*.jpg')))
+        frames = get_frames(args.images_path)
+        groundtruth = groundtruth[0:len(frames)]
 
-    # should be same number of frames and groundtruth data
-    assert len(groundtruth) == len(frames)
+        df = pd.DataFrame({'frame': frames, 'speed': groundtruth})
+    elif args.mode == 'testing':
+        frames = get_frames(args.images_path)
+        df = pd.DataFrame({'frame': frames})
+    else:
+        print('Incorrect mode...use training or testing')
+        return
 
-    df = pd.DataFrame({'frame': frames, 'speed': groundtruth})
-    df.to_csv(os.path.join(args.output_directory, 'dataset.csv'), index=False)
+    df.to_csv(os.path.join(args.output_directory, f'{args.mode}_dataset.csv'), index=False)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('images_path', type=str, help='Path to the training images')
-    parser.add_argument('groundtruth_path', type=str, help='Path to the groundtruth')
-    parser.add_argument('output_directory', type=str, help='Directory to output CSV to')
+    subparsers = parser.add_subparsers(dest='mode', help='Training or testing')
+
+    parser_training = subparsers.add_parser('training', help='Training help')
+    parser_training.add_argument('images_path', type=str, help='Path to the training images')
+    parser_training.add_argument('groundtruth_path', type=str, help='Path to the groundtruth')
+    parser_training.add_argument('output_directory', type=str, help='Directory to output CSV to')
+
+    parser_testing = subparsers.add_parser('testing', help='Testing help')
+    parser_testing.add_argument('images_path', type=str, help='Path to the training images')
+    parser_testing.add_argument('output_directory', type=str, help='Directory to output CSV to')
 
     main(parser.parse_args())

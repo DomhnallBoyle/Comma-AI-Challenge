@@ -1,4 +1,5 @@
 data/*.mp4
-data/*_images
+*.jpg
 .idea/*
 *.pyc
+*.h5

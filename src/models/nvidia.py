@@ -7,10 +7,11 @@
     Python Version: 3.6
 """
 
-from base import BaseModel
-
+import cv2
 from keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda
 from keras.models import Sequential
+
+from base import BaseModel
 
 HEIGHT, WIDTH, CHANNELS = (66, 200, 3)
 
@@ -24,7 +25,7 @@ class NvidiaModel(BaseModel):
     """
 
     def __init__(self):
-        super().__init__(height=HEIGHT, width=WIDTH, channels=CHANNELS)
+        super().__init__(model_name='nvidia', dimensions=(HEIGHT, WIDTH, CHANNELS))
 
     def build_model(self):
         model = Sequential()
@@ -62,3 +63,21 @@ class NvidiaModel(BaseModel):
         model.summary()
 
         return model
+
+    def preprocess(self, **kwargs):
+        image = kwargs['image']
+
+        # crop
+        image = image[self.args.crop_to:, :, :]
+
+        # resize
+        image = cv2.resize(image, (self.width, self.height), cv2.INTER_AREA)
+
+        # convert to YUV
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+
+        return image
+
+
+if __name__ == '__main__':
+    NvidiaModel()

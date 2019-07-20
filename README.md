@@ -17,9 +17,13 @@ Usage:
 python src/utils/video_to_frames.py data/train.mp4 data/train_images
 python src/utils/video_to_frames.py data/test.mp4 data/test_images
 
+# convert video to optical flow frames
+python src/optical_flow/dense.py data/train.mp4 data/optical_flow_train
+python src/optical_flow/dense.py data/test.mp4 data/optical_flow_test
+
 # create training dataset
 python src/utils/video_to_dataset.py data/train_images data/train.txt data
 
 # train models
-
+python src/models/nvidia.py train data/training_dataset.csv
 ```
